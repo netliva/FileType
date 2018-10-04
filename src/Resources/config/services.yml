@@ -1,0 +1,12 @@
+services:
+    netliva.file.upload_helper:
+        class: Netliva\FileTypeBundle\Service\UploadHelperService
+        arguments: [ "@service_container"]
+        tags:
+            - { name: twig.extension }
+
+    netliva.file_type:
+        class: Netliva\FileTypeBundle\Form\Type\NetlivaFileType
+        arguments: [ "@netliva.file.upload_helper" ]
+        tags: [ form.type ]
+            
