@@ -1,0 +1,16 @@
+{
+	"name": "netliva/filetype",
+	"license": "MIT",
+	"type": "library",
+	"description": "Netliva File Type",
+	"autoload": {
+		"psr-4": {
+			"Netliva\\FileTypeBundle\\": "src/"
+		}
+	},
+	"require": {
+		"php": ">=5.3.3",
+		"symfony/framework-bundle": "~2.7|~3.0|~4.0"
+	},
+	"minimum-stability": "stable"
+}
