@@ -1,12 +1,23 @@
 services:
-    netliva.file.upload_helper:
-        class: Netliva\FileTypeBundle\Service\UploadHelperService
+    Netliva\FileTypeBundle\Service\UploadHelperService:
+        public: false
         arguments: [ "@service_container"]
         tags:
             - { name: twig.extension }
+
+    netliva.file.upload_helper:
+        alias: Netliva\FileTypeBundle\Service\UploadHelperService
+        public: true
 
     netliva.file_type:
         class: Netliva\FileTypeBundle\Form\Type\NetlivaFileType
         arguments: [ "@netliva.file.upload_helper" ]
         tags: [ form.type ]
-            
+
+    netliva.file_loader:
+        class: Netliva\FileTypeBundle\Routing\FileLoader
+        arguments: [ "@service_container"]
+        tags:
+            - { name: routing.loader }
+
+

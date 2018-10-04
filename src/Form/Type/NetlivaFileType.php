@@ -42,7 +42,7 @@ class NetlivaFileType extends AbstractType
 				{
 					if ($fileName)
 					{
-						$path = $this->uploadHelperService->getUploadDir().DIRECTORY_SEPARATOR.$fileName;
+						$path = $this->uploadHelperService->getUploadPath().DIRECTORY_SEPARATOR.$fileName;
 						if (file_exists($path))
 							return new UploadedFile($path, $fileName);
 					}
@@ -54,7 +54,7 @@ class NetlivaFileType extends AbstractType
 					if ($data instanceof UploadedFile)
 					{
 						$fileName = $this->uploadHelperService->generateUniqueFileName($this->fieldName).'.'.$data->guessExtension();
-						$data->move($this->uploadHelperService->getUploadDir(), $fileName);
+						$data->move($this->uploadHelperService->getUploadPath(), $fileName);
 
 
 						/*
