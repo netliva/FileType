@@ -9,10 +9,10 @@
 namespace Netliva\FileTypeBundle\Service;
 
 
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class NetlivaFile extends File implements \JsonSerializable
+class NetlivaFile extends UploadedFile implements \JsonSerializable
 {
 
 	/**
@@ -20,15 +20,22 @@ class NetlivaFile extends File implements \JsonSerializable
 	 */
 	private $uri;
 
+	/**
+	 * @var string
+	 */
+	private $fileType;
+
 	public function __toString ()
 	{
 		return $this->getFilename();
 	}
 
 	public function __construct (string $path, UploadHelperService $uploadHelperService) {
-		parent::__construct($path);
+		parent::__construct($path, $uploadHelperService->getFileName($this), $this?mime_content_type($path):null, null, true);
 
 		$this->setUri($uploadHelperService->getFileUri($this));
+		$mime = explode("/",$this->getMimeType());
+		$this->setFileType($mime[0]);
 	}
 
 
@@ -62,14 +69,20 @@ class NetlivaFile extends File implements \JsonSerializable
 		$this->uri = $uri;
 	}
 
-	public function __wakeup ()
+
+	/**
+	 * @return string
+	 */
+	public function getFileType (): string
 	{
-		return [
-			"filename"	=> $this->getFilename(),
-			"mimeType"	=> $this->getMimeType(),
-			"type" 		=> $this->getType(),
-			"path" 		=> $this->getPath(),
-			"pathName"	=> $this->getPathname(),
-		];
+		return $this->fileType;
+	}
+
+	/**
+	 * @param string $fileType
+	 */
+	public function setFileType (string $fileType): void
+	{
+		$this->fileType = $fileType;
 	}
 }

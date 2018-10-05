@@ -1,8 +1,8 @@
 {% block netliva_file_type_widget %}
-	{% if form.vars.data and form.vars.data.mimeType|split("/").0 == "image" %}
+	{% if form.vars.data and form.vars.data.fileType is defined and form.vars.data.fileType == "image" %}
 		<img id="{{ form.vars.id }}_img" width="100" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" >
 	{% endif %}
-	{% if form.vars.data and deletable %}
+	{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
 		<input type="button" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
 			   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
 		/>
@@ -16,7 +16,7 @@
 		{%- endif -%}
 	</label>
 	</{{ element|default('div') }}>
-	{% if form.vars.data and deletable %}
+	{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
 		<script type="text/javascript">
 			document.getElementById("{{ form.vars.id }}_delete").addEventListener("click",function () {
 				var field = document.getElementById("{{ form.vars.id }}");

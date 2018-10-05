@@ -37,21 +37,16 @@ class UploadHelperService extends \Twig_Extension
 
 	public function getFileName($file)
 	{
+		if(is_string($file))
+			return $file;
 
-		switch ($file){
-			case is_string($file):
-				return $file;
-				break;
-			case is_object($file) and method_exists($file, "getFilename"):
-				return $file->getFileName();
-				break;
-			case is_array($file) and key_exists("filename", $file):
-				return $file["filename"];
-				break;
-			default:
-				return null;
-				break;
-		}
+		if(is_object($file) and method_exists($file, "getFilename"))
+			return $file->getFileName();
+
+		if(is_array($file) and key_exists("filename", $file))
+			return $file["filename"];
+
+		return null;
 	}
 
 	public function getFileUri($file)
