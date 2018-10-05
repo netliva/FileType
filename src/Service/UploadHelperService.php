@@ -31,7 +31,7 @@ class UploadHelperService extends \Twig_Extension
 	public function getFunctions()
 	{
 		return array(
-			new \Twig_SimpleFunction('netliva_file', [$this, 'getNetlivaFile']),
+			new \Twig_SimpleFunction('nl_file', [$this, 'getNetlivaFile']),
 		);
 	}
 

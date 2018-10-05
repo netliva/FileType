@@ -1,5 +1,12 @@
 {% block netliva_file_type_widget %}
-	<img width="100" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" alt="">
+	{% if form.vars.data and form.vars.data.mimeType|split("/").0 == "image" %}
+		<img id="{{ form.vars.id }}_img" width="100" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" >
+	{% endif %}
+	{% if form.vars.data and deletable %}
+		<input type="button" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
+			   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
+		/>
+	{% endif %}
 	<{{ element|default('div') }} class="custom-file">
 	{%- set type = type|default('file') -%}
 	{{- block('form_widget_simple') -}}
@@ -9,4 +16,34 @@
 		{%- endif -%}
 	</label>
 	</{{ element|default('div') }}>
+	{% if form.vars.data and deletable %}
+		<script type="text/javascript">
+			document.getElementById("{{ form.vars.id }}_delete").addEventListener("click",function () {
+				var field = document.getElementById("{{ form.vars.id }}");
+				var img = document.getElementById("{{ form.vars.id }}_img");
+				var othertext = this.dataset.othertext;
+				this.dataset.othertext = this.value;
+				this.value = othertext;
+				if (this.dataset.delete == "on")
+				{
+					this.dataset.delete = "off";
+					field.value = "";
+					field.type = "file";
+					if (img) img.style.display = img.dataset.display;
+				}
+				else
+				{
+					this.dataset.delete = "on";
+					field.type = "hidden";
+					field.value = "delete";
+					if (img)
+					{
+						img.dataset.display = img.style.display;
+						img.style.display = "none";
+					}
+				}
+				return false;
+			})
+		</script>
+	{% endif %}
 {% endblock %}

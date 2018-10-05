@@ -18,43 +18,46 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class NetlivaFileType extends AbstractType
 {
 	private $uploadHelperService;
-	private $file_before_submit;
+	private $file_before_submit = [];
 
 	public function __construct (UploadHelperService $uploadHelperService) {
 
 		$this->uploadHelperService = $uploadHelperService;
 	}
 
-	private $fieldName;
 	public function buildForm (FormBuilderInterface $builder, array $options)
 	{
-		$this->fieldName = $builder->getName();
 		$builder
-
-			->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($options) {
+			->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($options, $builder) {
 				$form = $event->getForm();
 				$requestHandler = $form->getConfig()->getRequestHandler();
+
+				// formdan delete değeri gönderildiyse, veritabanındaki değeri silmek için önceki değeri sil
+				if ($event->getData() == "delete")
+				{
+					$this->file_before_submit[$builder->getName()] = null;
+				}
 
 				if (!$requestHandler->isFileUpload($event->getData())) {
 					$event->setData(null);
 				}
 			})
 			->addModelTransformer(new CallbackTransformer(
-				function ($file) // veriyi çekerken
+				function ($file) use ($builder) // veriyi çekerken
 				{
 					$netliva_file = null;
 					$path = $this->uploadHelperService->getFilePath($file);
 					if (file_exists($path))
 						$netliva_file = new NetlivaFile($path, $this->uploadHelperService);
 
-					$this->file_before_submit = $netliva_file;
+					$this->file_before_submit[$builder->getName()] = $netliva_file;
 					return $netliva_file;
 				},
 				function ($data) use ($builder)  // kaydederken
 				{
 					if ($data instanceof UploadedFile)
 					{
-						$fileName = $this->uploadHelperService->generateUniqueFileName($this->fieldName).'.'.$data->guessExtension();
+						$fileName = $this->uploadHelperService->generateUniqueFileName($builder->getName()).'.'.$data->guessExtension();
 						$data->move($this->uploadHelperService->getUploadPath(), $fileName);
 
 						$path = $this->uploadHelperService->getUploadPath().DIRECTORY_SEPARATOR.$fileName;
@@ -63,9 +66,9 @@ class NetlivaFileType extends AbstractType
 							return new NetlivaFile($path, $this->uploadHelperService);
 						}
 					}
-					if (is_null($data) and $this->file_before_submit)
+					if (is_null($data) and $this->file_before_submit[$builder->getName()])
 					{
-						return $this->file_before_submit;
+						return $this->file_before_submit[$builder->getName()];
 					}
 
 					return null;
@@ -76,12 +79,14 @@ class NetlivaFileType extends AbstractType
 	public function buildView (FormView $view, FormInterface $form, array $options)
 	{
 		$view->vars['types'] = $options['types'];
+		$view->vars['deletable'] = $options['deletable'];
 	}
 
 	public function configureOptions (OptionsResolver $resolver)
 	{
 		$resolver->setDefaults([
 			'types'	=> null,
+			'deletable'	=> true,
 		]);	}
 
 	public function getBlockPrefix ()
