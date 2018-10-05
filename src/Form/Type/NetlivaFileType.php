@@ -1,6 +1,7 @@
 <?php
 namespace Netliva\FileTypeBundle\Form\Type;
 
+use Netliva\FileTypeBundle\Service\NetlivaFile;
 use Netliva\FileTypeBundle\Service\UploadHelperService;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
@@ -17,6 +18,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class NetlivaFileType extends AbstractType
 {
 	private $uploadHelperService;
+	private $file_before_submit;
 
 	public function __construct (UploadHelperService $uploadHelperService) {
 
@@ -38,36 +40,35 @@ class NetlivaFileType extends AbstractType
 				}
 			})
 			->addModelTransformer(new CallbackTransformer(
-				function ($fileName) // veriyi çekerken
+				function ($file) // veriyi çekerken
 				{
-					if ($fileName)
-					{
-						$path = $this->uploadHelperService->getUploadPath().DIRECTORY_SEPARATOR.$fileName;
-						if (file_exists($path))
-							return new UploadedFile($path, $fileName);
-					}
-					return null;
+					$netliva_file = null;
+					$path = $this->uploadHelperService->getFilePath($file);
+					if (file_exists($path))
+						$netliva_file = new NetlivaFile($path, $this->uploadHelperService);
+
+					$this->file_before_submit = $netliva_file;
+					return $netliva_file;
 				},
-				function ($data)  // kaydederken
+				function ($data) use ($builder)  // kaydederken
 				{
-					$fileName = null;
 					if ($data instanceof UploadedFile)
 					{
 						$fileName = $this->uploadHelperService->generateUniqueFileName($this->fieldName).'.'.$data->guessExtension();
 						$data->move($this->uploadHelperService->getUploadPath(), $fileName);
 
-
-						/*
-						$path = $this->uploadHelperService->getUploadDir().DIRECTORY_SEPARATOR.$fileName;
+						$path = $this->uploadHelperService->getUploadPath().DIRECTORY_SEPARATOR.$fileName;
 						if (file_exists($path))
 						{
-							return new UploadedFile("public/uploads", $fileName, mime_content_type($path), null, true);
+							return new NetlivaFile($path, $this->uploadHelperService);
 						}
-						*/
-
+					}
+					if (is_null($data) and $this->file_before_submit)
+					{
+						return $this->file_before_submit;
 					}
 
-					return $fileName;
+					return null;
 				}
 			));
 	}

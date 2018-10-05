@@ -1,5 +1,5 @@
 {% block netliva_file_type_widget %}
-	<img width="100" src="{{ form.vars.data ? asset(form.vars.data|file_path) }}" alt="">
+	<img width="100" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" alt="">
 	<{{ element|default('div') }} class="custom-file">
 	{%- set type = type|default('file') -%}
 	{{- block('form_widget_simple') -}}
