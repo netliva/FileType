@@ -19,6 +19,7 @@ class NetlivaFileType extends AbstractType
 {
 	private $uploadHelperService;
 	private $file_before_submit = [];
+	private $moved_file = [];
 
 	public function __construct (UploadHelperService $uploadHelperService) {
 
@@ -77,6 +78,7 @@ class NetlivaFileType extends AbstractType
 				if (file_exists($path))
 				{
 					$data = new NetlivaFile($path, $this->uploadHelperService);
+					$this->moved_file[$builder->getName()] = $data;
 				}
 			}
 			return $data;
@@ -118,6 +120,10 @@ class NetlivaFileType extends AbstractType
 
 	public function finishView(FormView $view, FormInterface $form, array $options)
 	{
+		if ($form->isSubmitted() and !$form->getParent()->isValid() and key_exists($form->getName(), $this->moved_file))
+		{
+			@unlink($this->moved_file[$form->getName()]->getPathname());
+		}
 		$view->vars['multipart'] = true;
 	}
 
