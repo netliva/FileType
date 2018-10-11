@@ -1,8 +1,14 @@
 <?php
 namespace Netliva\FileTypeBundle\Controller;
 
+use Netliva\FileTypeBundle\Form\Type\NetlivaFileType;
+use Netliva\FileTypeBundle\Service\NetlivaDirectory;
+use Netliva\MediaLibBundle\Entity\Files;
+use Netliva\MediaLibBundle\Form\FormType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class FileController extends Controller
@@ -20,6 +26,55 @@ class FileController extends Controller
 		}
 
 		throw $this->createNotFoundException('Dosya Bulunamadı.');
+	}
+
+	public function getFiles(Request $request): JsonResponse
+	{
+		$em = $this->getDoctrine()->getManager();
+		$files = $em->getRepository("NetlivaMediaLibBundle:Files")->findAll();
+		$fileExt = $this->get("netliva.file.upload_helper");
+
+		$data = [];
+		foreach ($files as $file)
+		{
+			$data[] = [
+				"id" => $file->getId(),
+				"url" => $fileExt->getFileUri($file->getFileInfo()),
+			];
+		}
+		
+		return new JsonResponse($data);
+	}
+
+	public function upload(Request $request): JsonResponse
+	{
+		$upload_success = null;
+		$upload_error = '';
+
+		$form = $this->createForm(FormType::class);
+		$form->handleRequest($request);
+
+		$em = $this->getDoctrine()->getManager();
+
+		if ($form->isSubmitted() && $form->isValid())
+		{
+			$dir = $form->get("nmlb-file")->getData();
+			if ($dir instanceof NetlivaDirectory)
+			{
+				foreach ($dir->getFiles() as $file)
+				{
+					$fe = new Files();
+					$fe->setAddAt(new \DateTime());
+					$fe->setTitle(pathinfo($file->getOriginalName(),PATHINFO_FILENAME));
+					$fe->setFileInfo($file);
+					$em->persist($fe);
+					$em->flush();
+				}
+			}
+			return new JsonResponse([ 'success'=> true, 'files'=> $dir]);
+		}
+
+		return new JsonResponse([ 'success'=> false ]);
 	}
 
 }
