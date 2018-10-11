@@ -25,17 +25,24 @@ class NetlivaFile extends UploadedFile implements \JsonSerializable
 	 */
 	private $fileType;
 
+	/**
+	 * @var string|null
+	 */
+	private $originalName;
+
 	public function __toString ()
 	{
 		return $this->getFilename();
 	}
 
-	public function __construct (string $path, UploadHelperService $uploadHelperService) {
+	public function __construct (string $path, UploadHelperService $uploadHelperService, $originalName = null) {
 		parent::__construct($path, $uploadHelperService->getFileName($this), $this?mime_content_type($path):null, null, true);
 
-		$this->setUri($uploadHelperService->getFileUri($this));
 		$mime = explode("/",$this->getMimeType());
+		
+		$this->setUri($uploadHelperService->getFileUri($this));
 		$this->setFileType($mime[0]);
+		$this->setOriginalName($originalName);
 	}
 
 
@@ -43,13 +50,14 @@ class NetlivaFile extends UploadedFile implements \JsonSerializable
 	{
 
 		return [
-			"filename"	=> $this->getFilename(),
-			"mimeType"	=> $this->getMimeType(),
-			"type" 		=> $this->getType(),
-			"extension"	=> $this->getExtension(),
-			"path" 		=> $this->getPath(),
-			"pathName"	=> $this->getPathname(),
-			"uri"		=> $this->getUri(),
+			"filename"		=> $this->getFilename(),
+			"mimeType"		=> $this->getMimeType(),
+			"type" 			=> $this->getType(),
+			"extension"		=> $this->getExtension(),
+			"path" 			=> $this->getPath(),
+			"pathName"		=> $this->getPathname(),
+			"uri"			=> $this->getUri(),
+			"originalName"	=> $this->originalName,
 		 ];
 	}
 
@@ -85,4 +93,21 @@ class NetlivaFile extends UploadedFile implements \JsonSerializable
 	{
 		$this->fileType = $fileType;
 	}
+	
+	/**
+	 * @return string
+	 */
+	public function getOriginalName (): string
+	{
+		return $this->originalName;
+	}
+
+	/**
+	 * @param string|null $originalName
+	 */
+	public function setOriginalName ($originalName): void
+	{
+		$this->originalName = $originalName;
+	}
+
 }

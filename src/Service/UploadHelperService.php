@@ -65,7 +65,11 @@ class UploadHelperService extends \Twig_Extension
 		$fileName = $this->getFileName($file);
 		if($fileName)
 		{
-			return new NetlivaFile($this->getUploadPath().DIRECTORY_SEPARATOR.$fileName, $this);
+			$oriName = null;
+			if (is_array($file) and key_exists("original_name",$file))
+				$oriName = $file["original_name"];
+
+			return new NetlivaFile($this->getUploadPath().DIRECTORY_SEPARATOR.$fileName, $this, $oriName);
 		}
 		return null;
 	}

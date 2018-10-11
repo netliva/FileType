@@ -1,12 +1,19 @@
 {% block netliva_file_type_widget %}
-	{% if form.vars.data and form.vars.data.fileType is defined and form.vars.data.fileType == "image" %}
-		<img id="{{ form.vars.id }}_img" width="100" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" >
-	{% endif %}
-	{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
+	{% if form.vars.data and form.vars.data.fileType is defined %}
+		{% if form.vars.data.fileType == "image" %}
+			<img id="{{ form.vars.id }}_img" width="50" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" >
+		{% endif %}
 		<input type="button" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
 			   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
 		/>
+	{% elseif form.vars.data and form.vars.data.files is defined %}
+		{% for data in form.vars.data.files %}
+			{% if data.fileType == "image" %}
+				<img id="{{ form.vars.id }}_img" width="50" src="{{ data ? asset(data|nl_file_uri) }}" >
+			{% endif %}
+		{% endfor %}
 	{% endif %}
+
 	<{{ element|default('div') }} class="custom-file">
 	{%- set type = type|default('file') -%}
 	{{- block('form_widget_simple') -}}
