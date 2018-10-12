@@ -59,6 +59,7 @@ class FileController extends Controller
 		if ($form->isSubmitted() && $form->isValid())
 		{
 			$dir = $form->get("nmlb-file")->getData();
+			$returnFiles = [];
 			if ($dir instanceof NetlivaDirectory)
 			{
 				foreach ($dir->getFiles() as $file)
@@ -69,9 +70,11 @@ class FileController extends Controller
 					$fe->setFileInfo($file);
 					$em->persist($fe);
 					$em->flush();
+
+					$returnFiles [$fe->getId()] = $file;
 				}
 			}
-			return new JsonResponse([ 'success'=> true, 'files'=> $dir]);
+			return new JsonResponse([ 'success'=> true, 'files'=> $returnFiles]);
 		}
 
 		return new JsonResponse([ 'success'=> false ]);
