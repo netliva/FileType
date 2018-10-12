@@ -1,6 +1,7 @@
 <?php
 namespace Netliva\FileTypeBundle\Controller;
 
+use Doctrine\ORM\QueryBuilder;
 use Netliva\FileTypeBundle\Form\Type\NetlivaFileType;
 use Netliva\FileTypeBundle\Service\NetlivaDirectory;
 use Netliva\MediaLibBundle\Entity\Files;
@@ -31,7 +32,26 @@ class FileController extends Controller
 	public function getFiles(Request $request): JsonResponse
 	{
 		$em = $this->getDoctrine()->getManager();
-		$files = $em->getRepository("NetlivaMediaLibBundle:Files")->findAll();
+		/** @var QueryBuilder $qb */
+		$qb = $em->getRepository("NetlivaMediaLibBundle:Files")->createQueryBuilder('f');
+		$qb->orderBy("f.addAt","DESC");
+
+
+		if ($request->request->get("search_text"))
+		{
+			$qb->andWhere(
+				$qb->expr()->orX(
+					$qb->expr()->like("f.title", ":search_text"),
+					$qb->expr()->like("f.caption", ":search_text"),
+					$qb->expr()->like("f.alt", ":search_text"),
+					$qb->expr()->like("f.description", ":search_text")
+				)
+			)->setParameter("search_text", "%".$request->request->get("search_text")."%");
+		}
+
+		$query = $qb->getQuery();
+		$files = $query->getResult();
+
 		$fileExt = $this->get("netliva.file.upload_helper");
 
 		$data = [];
