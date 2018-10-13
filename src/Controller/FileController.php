@@ -58,8 +58,9 @@ class FileController extends Controller
 		foreach ($files as $file)
 		{
 			$data[] = [
-				"id" => $file->getId(),
-				"url" => $fileExt->getFileUri($file->getFileInfo()),
+				"id" 		=> $file->getId(),
+				"url" 		=> $fileExt->getFileUri($file->getFileInfo()),
+				"filename" 	=> $fileExt->getFileName($file->getFileInfo()),
 			];
 		}
 		

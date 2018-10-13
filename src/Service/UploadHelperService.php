@@ -10,15 +10,19 @@ namespace Netliva\FileTypeBundle\Service;
 
 
 use Doctrine\ORM\EntityManagerInterface;
+use Netliva\MediaLibBundle\Entity\Files;
+use Netliva\MediaLibBundle\Service\NetlivaMediaFile;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class UploadHelperService extends \Twig_Extension
 {
 	private $container;
+	private $em;
 
-	public function __construct (ContainerInterface $container) {
+	public function __construct (ContainerInterface $container, EntityManagerInterface $em) {
 		$this->container = $container;
+		$this->em = $em;
 	}
 
 	public function getFilters()
@@ -71,6 +75,28 @@ class UploadHelperService extends \Twig_Extension
 
 			return new NetlivaFile($this->getUploadPath().DIRECTORY_SEPARATOR.$fileName, $this, $oriName);
 		}
+		return null;
+	}
+
+	public function getNetlivaMediaFile($mediaId)
+	{
+		/** @var Files $file */
+		$file = $this->em->getRepository("NetlivaMediaLibBundle:Files")->find($mediaId);
+		if($file and $file->getFileInfo())
+		{
+			return new NetlivaMediaFile($mediaId, $this);
+		}
+		return null;
+	}
+
+	public function getMedia($mediaId)
+	{
+		$file = $this->em->getRepository("NetlivaMediaLibBundle:Files")->find($mediaId);
+		if($file and $file->getFileInfo())
+		{
+			return $file;
+		}
+
 		return null;
 	}
 

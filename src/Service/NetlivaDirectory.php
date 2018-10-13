@@ -3,6 +3,7 @@
 namespace Netliva\FileTypeBundle\Service;
 
 
+use Netliva\MediaLibBundle\Service\NetlivaMediaFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -45,15 +46,26 @@ class NetlivaDirectory implements \JsonSerializable
 
 	public function __toString (): string
 	{
-		$text = "";
-		$say = 0;
+		$data = [];
+		$type = null;
 		foreach ($this->getFiles() as $file)
 		{
-			if($say) $text .= "|";
-			$text .= $file->getFilename();
-			$say++;
+			if ($file instanceof NetlivaMediaFile)
+			{
+				$data[$file->getEntity()->getId()] = $file->getFilename();
+				$type = "media";
+			}
+			else
+			{
+				$data[] = $file->getFilename();
+				$type = "file";
+			}
 		}
-		return $text;
+
+		if ($type == "media") return json_encode($data);
+		else if ($type == "media") return implode("|", $data);
+
+		return "";
 	}
 
 	public function jsonSerialize()
