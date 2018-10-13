@@ -1,33 +1,50 @@
-{% block netliva_file_type_widget %}
-	{% if form.vars.data and form.vars.data.fileType is defined %}
-		{% if form.vars.data.fileType == "image" %}
-			<img id="{{ form.vars.id }}_img" width="50" src="{{ form.vars.data ? asset(form.vars.data|nl_file_uri) }}" >
-		{% endif %}
-		<input type="button" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
-			   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
-		/>
-	{% elseif form.vars.data and form.vars.data.files is defined %}
-		{% for data in form.vars.data.files %}
-			{% if data.fileType == "image" %}
-				<img id="{{ form.vars.id }}_img" width="50" src="{{ data ? asset(data|nl_file_uri) }}" >
-			{% endif %}
-		{% endfor %}
-	{% endif %}
 
-	<{{ element|default('div') }} class="custom-file">
-	{%- set type = type|default('file') -%}
-	{{- block('form_widget_simple') -}}
-	<label for="{{ form.vars.id }}" class="custom-file-label">
-		{%- if attr.placeholder is defined -%}
-			{{- translation_domain is same as(false) ? attr.placeholder : attr.placeholder|trans({}, translation_domain) -}}
-		{%- endif -%}
-	</label>
+{% macro getImg(id, data) %}
+	<li role="checkbox" aria-checked="true" class="nftb-image">
+		<div class="nftb-image-preview">
+			<div class="thumbnail">
+				<div class="centered">
+					<img src="{{ data ? asset(data|nl_file_uri) }}">
+				</div>
+			</div>
+		</div>
+	</li>
+{% endmacro %}
+
+{% block netliva_file_type_widget %}
+	{% import _self as func %}
+	<{{ element|default('div') }} class="nftb-area">
+		<ul class="nftb-images" id="{{ form.vars.id }}_images_area">
+			{% if form.vars.data and form.vars.data.fileType is defined %}
+				{% if form.vars.data.fileType == "image" %}
+					{{ func.getImg (form.vars.id, form.vars.data) }}
+				{% endif %}
+				<input type="button" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
+					   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
+				/>
+			{% elseif form.vars.data and form.vars.data.files is defined %}
+				{% for data in form.vars.data.files %}
+					{% if data.fileType == "image" %}
+						{{ func.getImg (form.vars.id, data) }}
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+		</ul>
+		<{{ element|default('div') }} class="custom-file">
+		{%- set type = type|default('file') -%}
+		{{- block('form_widget_simple') -}}
+		<label for="{{ form.vars.id }}" class="custom-file-label">
+			{%- if attr.placeholder is defined -%}
+				{{- translation_domain is same as(false) ? attr.placeholder : attr.placeholder|trans({}, translation_domain) -}}
+			{%- endif -%}
+		</label>
+		</{{ element|default('div') }}>
 	</{{ element|default('div') }}>
 	{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
 		<script type="text/javascript">
 			document.getElementById("{{ form.vars.id }}_delete").addEventListener("click",function () {
 				var field = document.getElementById("{{ form.vars.id }}");
-				var img = document.getElementById("{{ form.vars.id }}_img");
+				var img = document.getElementById("{{ form.vars.id }}_images_area");
 				var othertext = this.dataset.othertext;
 				this.dataset.othertext = this.value;
 				this.value = othertext;
@@ -53,4 +70,23 @@
 			})
 		</script>
 	{% endif %}
+	<style>
+		.nftb-area, .nftb-area .custom-file { display: inline-block; }
+		#{{ form.vars.id }}_images_area { margin: 0; padding: 0; display: inline-block;vertical-align: middle; }
+		#{{ form.vars.id }}_images_area .nftb-image {
+			position: relative; float: left; padding: 3px; margin: 0; color: #444; cursor: pointer; list-style: none; text-align: center;
+			-webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; width: 50px; box-sizing: border-box;
+		}
+
+		#{{ form.vars.id }}_images_area .nftb-image-preview { position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,.1), inset 0 0 0 1px rgba(0,0,0,.05); background: #eee; cursor: pointer; }
+		#{{ form.vars.id }}_images_area .nftb-image-preview:before { content: ""; display: block; padding-top: 100%; }
+		#{{ form.vars.id }}_images_area .nftb-image .thumbnail {overflow: hidden;position: absolute;top: 0;right: 0;bottom: 0;left: 0;opacity: 1;transition: opacity .1s;}
+		#{{ form.vars.id }}_images_area .nftb-image .thumbnail .centered {position: absolute;top: 0;left: 0;width: 100%;height: 100%;-webkit-transform: translate(50%,50%);transform: translate(50%,50%);}
+		#{{ form.vars.id }}_images_area .nftb-image .thumbnail:after {content: "";display: block;position: absolute;top: 0;left: 0;right: 0;bottom: 0;box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);overflow: hidden;}
+
+
+		#{{ form.vars.id }}_images_area .nftb-image .thumbnail .centered img {-webkit-transform: translate(-50%,-50%); transform: translate(-50%,-50%);}
+		#{{ form.vars.id }}_images_area .nftb-image .thumbnail img { position: absolute; top: 0;left: 0; max-height: 100%; }
+
+	</style>
 {% endblock %}
