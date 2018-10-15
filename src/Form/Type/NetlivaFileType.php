@@ -1,7 +1,7 @@
 <?php
 namespace Netliva\FileTypeBundle\Form\Type;
 
-use Netliva\FileTypeBundle\Service\NetlivaDirectory;
+use Netliva\FileTypeBundle\Service\NetlivaFolder;
 use Netliva\FileTypeBundle\Service\NetlivaFile;
 use Netliva\FileTypeBundle\Service\UploadHelperService;
 use Symfony\Component\Form\AbstractType;
@@ -45,7 +45,7 @@ class NetlivaFileType extends AbstractType
 
 			if ($is_dir)
 			{
-				$returnData = new NetlivaDirectory();
+				$returnData = new NetlivaFolder();
 				foreach ($data as $d)
 				{
 					$file = $this->_createNetlivaFile($d);
@@ -87,7 +87,7 @@ class NetlivaFileType extends AbstractType
 		{
 			if (is_array($data))
 			{
-				$dir = new NetlivaDirectory();
+				$dir = new NetlivaFolder();
 				$dir->reset();
 				foreach ($data as $k => $f)
 				{

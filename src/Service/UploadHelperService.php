@@ -85,7 +85,7 @@ class UploadHelperService extends \Twig_Extension
 		if (is_string($data))
 			$data = @json_decode($data);
 
-		$returnData = new NetlivaDirectory();
+		$returnData = new NetlivaFolder();
 
 		if ($data)
 		{

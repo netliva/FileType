@@ -3,7 +3,7 @@ namespace Netliva\FileTypeBundle\Controller;
 
 use Doctrine\ORM\QueryBuilder;
 use Netliva\FileTypeBundle\Form\Type\NetlivaFileType;
-use Netliva\FileTypeBundle\Service\NetlivaDirectory;
+use Netliva\FileTypeBundle\Service\NetlivaFolder;
 use Netliva\MediaLibBundle\Entity\Files;
 use Netliva\MediaLibBundle\Form\FormType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -81,7 +81,7 @@ class FileController extends Controller
 		{
 			$dir = $form->get("nmlb-file")->getData();
 			$returnFiles = [];
-			if ($dir instanceof NetlivaDirectory)
+			if ($dir instanceof NetlivaFolder)
 			{
 				foreach ($dir->getFiles() as $file)
 				{

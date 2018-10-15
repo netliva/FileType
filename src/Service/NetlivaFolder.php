@@ -7,7 +7,7 @@ use Netliva\MediaLibBundle\Service\NetlivaMediaFile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class NetlivaDirectory implements \JsonSerializable
+class NetlivaFolder implements \JsonSerializable
 {
 	/**
 	 * @var NetlivaFile[]
@@ -24,14 +24,14 @@ class NetlivaDirectory implements \JsonSerializable
 	/**
 	 * @param NetlivaFile $file
 	 */
-	public function addFile (NetlivaFile $file): NetlivaDirectory
+	public function addFile (NetlivaFile $file): NetlivaFolder
 	{
 		$this->files[] = $file;
 
 		return $this;
 	}
 
-	public function reset (): NetlivaDirectory
+	public function reset (): NetlivaFolder
 	{
 		$this->files = [];
 
