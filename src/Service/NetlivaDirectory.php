@@ -10,12 +10,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class NetlivaDirectory implements \JsonSerializable
 {
 	/**
-	 * @var boolean
-	 */
-	private $netliva_dir = true;
-
-
-	/**
 	 * @var NetlivaFile[]
 	 */
 	private $files = [];
@@ -70,12 +64,17 @@ class NetlivaDirectory implements \JsonSerializable
 
 	public function jsonSerialize()
 	{
-		return $this->getFiles();
-
 		$arr = [];
 		foreach ($this->getFiles() as $file)
 		{
-			$arr[] = $file->jsonSerialize();
+			if ($file instanceof NetlivaMediaFile)
+			{
+				$arr[$file->getEntity()->getId()] = $file->getFilename();
+			}
+			else
+			{
+				$arr[] = $file->jsonSerialize();
+			}
 		}
 		return $arr;
 	}

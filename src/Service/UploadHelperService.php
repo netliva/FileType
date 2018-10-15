@@ -35,7 +35,9 @@ class UploadHelperService extends \Twig_Extension
 	public function getFunctions()
 	{
 		return array(
-			new \Twig_SimpleFunction('nl_file', [$this, 'getNetlivaFile']),
+			new \Twig_SimpleFunction('get_nl_mfolder', [$this, 'getNetlivaMediaFolder']),
+			new \Twig_SimpleFunction('get_nl_mfile', [$this, 'getNetlivaMediaFile']),
+			new \Twig_SimpleFunction('get_nl_file', [$this, 'getNetlivaFile']),
 		);
 	}
 
@@ -76,6 +78,26 @@ class UploadHelperService extends \Twig_Extension
 			return new NetlivaFile($this->getUploadPath().DIRECTORY_SEPARATOR.$fileName, $this, $oriName);
 		}
 		return null;
+	}
+
+	public function getNetlivaMediaFolder($data)
+	{
+		if (is_string($data))
+			$data = @json_decode($data);
+
+		$returnData = new NetlivaDirectory();
+
+		if ($data)
+		{
+			foreach ($data as $mediaId => $info)
+			{
+				$file = $this->getNetlivaMediaFile($mediaId);
+				if($file)
+					$returnData->addFile($file);
+			}
+		}
+
+		return $returnData;
 	}
 
 	public function getNetlivaMediaFile($mediaId)
