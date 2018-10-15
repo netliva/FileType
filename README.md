@@ -109,4 +109,20 @@ public function buildForm (FormBuilderInterface $formBuilder, array $options)
 //...
 ?>
  ```
+### Kaydedilen verileri kullanma
+ 
+ 
+eğer tek dosya yüklediyseniz;
+ 
+ ```twig
+<img src="{{ entity.image|nl_file_uri }}" />
+```
+
+eğer multiple => true olarak yükleme yaptıysanız;
+ ```twig
+{% for img in entity.images %}
+	<img src="{{ img|nl_file_uri }}" />
+{% endfor %}
+```
+
  
