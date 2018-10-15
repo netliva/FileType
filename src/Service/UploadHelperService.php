@@ -61,7 +61,7 @@ class UploadHelperService extends \Twig_Extension
 		if($fileName)
 		{
 			$config = $this->container->getParameter('netliva.file_config');
-			return $config["upload_uri"]."/".$fileName;
+			return $config["download_uri"]."/".$fileName;
 		}
 		return null;
 	}

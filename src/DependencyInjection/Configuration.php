@@ -23,7 +23,7 @@ class Configuration implements ConfigurationInterface
 						->arrayNode('valid_filetypes')->defaultValue(array("pdf","docx","xlsx","pptx","rar","zip","bmp","gif","jpg","jpeg","png","tiff"))->prototype('scalar')->end()->end()
 						->scalarNode('max_size')->defaultValue(1024 * 1024 * 1024)->end()
 						->scalarNode('upload_dir')->defaultValue('public/netliva_uploads')->end()
-						->scalarNode('upload_uri')->defaultValue('/uploads')->end()
+						->scalarNode('download_uri')->defaultValue('/uploads')->end()
 					->end()
 				->end()
 			->end()
