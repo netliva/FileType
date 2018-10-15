@@ -1,5 +1,6 @@
 services:
     Netliva\FileTypeBundle\Service\UploadHelperService:
+        class: Netliva\FileTypeBundle\Service\UploadHelperService
         public: false
         arguments: [ "@service_container",  '@doctrine.orm.entity_manager']
         tags:
@@ -12,7 +13,8 @@ services:
     netliva.file_type:
         class: Netliva\FileTypeBundle\Form\Type\NetlivaFileType
         arguments: [ "@netliva.file.upload_helper" ]
-        tags: [ form.type ]
+        tags:
+            - { name: form.type }
 
     netliva.file_loader:
         class: Netliva\FileTypeBundle\Routing\FileLoader

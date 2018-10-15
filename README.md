@@ -57,10 +57,56 @@ class AppKernel extends Kernel
 }
 ```
 
-##Routes Definations
+Configurations
+==============
+
+Routes Definations
+------------------
 
 ```yaml
 netliva_file_route:
   resource: .
   type: netliva_file_route
 ```
+
+Config Definations
+------------------
+Yükleyeceğiniz dosyaların nereye yükleneceğini ve 
+indirme linkinin neresi olacağını aşağıdaki kodları ayarlar dosyanıza ekleyerek
+düzenleyebilirsiniz. Bu ayarlar opsiyonel olup varsayılan değerler 
+aşağıdaki gibidir. 
+
+```yaml
+# Symfony >= 4.0. Create a dedicated netliva_config.yaml in config/packages with:
+# Symfony >= 3.3. Add in your app/config/config.yml:
+
+netliva_file_type:
+    file_config:
+        upload_dir: public/netliva_uploads
+        download_uri: /uploads
+```
+* **upload_dir:** dosyalarınızın proje ana klasöründen itibaren nereye yükleneceğini tanımlamanızı sağlar.
+* **download_uri:**  yüklenen dosyalarınızın hangi klasör altından indirileceğini gösteren sanal bir dizindir. 
+Dosyalarınız gerçekte bu klasör altında yeralmaz sadece dosyanın görünen url'ini belirler. 
+Eğer burada belirteceğiniz klasör gerçekte proje ana dizininde bulunursa görüntülemede sıkıntı çıkabilir.
+
+
+Basic Usage
+===========
+Öncelikle `json_array` veya `text` formatında veritabanı alanınızı oluşturun.
+Ardından bu alan için formtype'a aşağıdaki gibi tanımlamanızı ekleyin.
+
+ 
+ ```php
+<?php
+//...
+public function buildForm (FormBuilderInterface $formBuilder, array $options)
+{
+	//...
+	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false]);
+	//...
+}
+//...
+?>
+ ```
+ 
