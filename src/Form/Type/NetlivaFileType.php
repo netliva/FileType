@@ -155,6 +155,7 @@ class NetlivaFileType extends AbstractType
 	{
 		$view->vars['types'] = $options['types'];
 		$view->vars['deletable'] = $options['deletable'];
+		$view->vars['bootstrap'] = $options['bootstrap'];
 
 		if ($options['multiple']) {
 			$view->vars['full_name'] .= '[]';
@@ -187,6 +188,7 @@ class NetlivaFileType extends AbstractType
 		$resolver->setDefaults([
 			'types'			=> null,
 			'deletable'		=> true,
+			'bootstrap'		=> false,
 			'unique_name'	=> false,
 			'compound' 		=> false,
 			'data_class' 	=> $dataClass,
