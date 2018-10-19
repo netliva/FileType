@@ -21,7 +21,6 @@ use Symfony\Component\OptionsResolver\Options;
 class NetlivaFileType extends AbstractType
 {
 	private $uploadHelperService;
-	private $file_before_submit = [];
 	private $moved_file = [];
 
 	public function __construct (UploadHelperService $uploadHelperService) {
@@ -31,9 +30,10 @@ class NetlivaFileType extends AbstractType
 
 	public function buildForm (FormBuilderInterface $builder, array $options)
 	{
+		$file_before_submit = null;
 
 		// DB'den veriyi çekerken
-		$getDataFromModel = function ($data) use ($builder)
+		$getDataFromModel = function ($data) use ($builder, &$file_before_submit)
 		{
 			$returnData = null;
 
@@ -58,7 +58,7 @@ class NetlivaFileType extends AbstractType
 				$returnData = $this->_createNetlivaFile($data);
 			}
 
-			$this->file_before_submit[$builder->getName()] = $returnData;
+			$file_before_submit = $returnData;
 			return $returnData;
 		};
 
@@ -72,11 +72,11 @@ class NetlivaFileType extends AbstractType
 		};
 
 		// Veriyi Formdan Alırken
-		$getDataFromView = function($data) use ($builder)
+		$getDataFromView = function($data) use ($builder, &$file_before_submit)
 		{
-			if (!$data and $this->file_before_submit[ $builder->getName() ])
+			if (!$data and $file_before_submit)
 			{
-				$data = $this->file_before_submit[ $builder->getName() ];
+				$data = $file_before_submit;
 			}
 
 			return $data;
@@ -102,14 +102,14 @@ class NetlivaFileType extends AbstractType
 			return $data;
 		};
 
-		$evetnPreSubmit = function(FormEvent $event) use ($options, $builder) {
+		$evetnPreSubmit = function(FormEvent $event) use ($options, $builder, &$file_before_submit) {
 			$form           = $event->getForm();
 			$requestHandler = $form->getConfig()->getRequestHandler();
 
 			// formdan delete değeri gönderildiyse, veritabanındaki değeri silmek için önceki değeri sil
 			if ($event->getData() == "delete")
 			{
-				$this->file_before_submit[ $builder->getName() ] = null;
+				$file_before_submit = null;
 			}
 
 			if ($options['multiple']) {
