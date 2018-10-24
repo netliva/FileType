@@ -61,6 +61,15 @@ class FileController extends Controller
 				"id" 		=> $file->getId(),
 				"url" 		=> $fileExt->getFileUri($file->getFileInfo()),
 				"filename" 	=> $fileExt->getFileName($file->getFileInfo()),
+				"data"		=> [
+					"mimeType"		=> key_exists("mimeType",$file->getFileInfo()) ? $file->getFileInfo()["mimeType"] : null,
+					"extension"		=> key_exists("extension",$file->getFileInfo()) ? $file->getFileInfo()["extension"] : null,
+					"title"			=> $file->getTitle(),
+					"caption"		=> $file->getCaption(),
+					"alt"			=> $file->getAlt(),
+					"description"	=> $file->getDescription(),
+					"addAt"			=> $file->getAddAt()->format("d.m.Y H:i"),
+				]
 			];
 		}
 		
