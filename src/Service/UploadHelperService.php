@@ -102,6 +102,8 @@ class UploadHelperService extends \Twig_Extension
 
 	public function getNetlivaMediaFile($mediaId)
 	{
+		if (!$mediaId) return null;
+
 		/** @var Files $file */
 		$file = $this->em->getRepository("NetlivaMediaLibBundle:Files")->find($mediaId);
 		if($file and $file->getFileInfo())
@@ -113,6 +115,8 @@ class UploadHelperService extends \Twig_Extension
 
 	public function getMedia($mediaId)
 	{
+		if (!$mediaId) return null;
+		
 		$file = $this->em->getRepository("NetlivaMediaLibBundle:Files")->find($mediaId);
 		if($file and $file->getFileInfo())
 		{
