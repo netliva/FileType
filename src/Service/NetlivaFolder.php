@@ -57,7 +57,7 @@ class NetlivaFolder implements \JsonSerializable
 		}
 
 		if ($type == "media") return json_encode($data);
-		else if ($type == "media") return implode("|", $data);
+		else if ($type == "file") return implode("|", $data);
 
 		return "";
 	}
