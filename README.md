@@ -104,6 +104,15 @@ public function buildForm (FormBuilderInterface $formBuilder, array $options)
 {
 	//...
 	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false]);
+	// Eğer Bootstrap Css Kütüphanesini kullanıyorsanız, bootstrap görünümünü aktifleştirin
+	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false, 'bootstrap'=>true]);
+	// Yüklenen dosya için benzersiz bir isim ile yüklenmesini isterseniz unique_name aktifleştirebilirsiniz
+	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false, 'unique_name'=>true]);
+	// Dosyanın belirtilen ana yükleme dizini içinde alt klasöre yüklenmesi için 'sub_folder' kullanabilirsiniz
+	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false, 'sub_folder'=>'categorized/sub/folder']);
+	// return_data_type yardımıyla dönüş değerini belirleyebilirsiniz. Varsayılan değer 'array' dir.
+	// Eğer veritabanı alanı text ise 'string', json ise 'array' belirlemeniz uygundur.
+	$formBuilder->add('images', NetlivaFileType::class, [ 'label' => 'Images', 'multiple' => false, 'return_data_type'=>'string']);
 	//...
 }
 //...
@@ -125,4 +134,3 @@ eğer multiple => true olarak yükleme yaptıysanız;
 {% endfor %}
 ```
 
- 

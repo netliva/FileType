@@ -13,18 +13,21 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\Options;
 
 
 class NetlivaFileType extends AbstractType
 {
-	private $uploadHelperService;
+	private $uhs;
+	private $request;
 	private $moved_file = [];
 
-	public function __construct (UploadHelperService $uploadHelperService) {
-
-		$this->uploadHelperService = $uploadHelperService;
+	public function __construct (UploadHelperService $uploadHelperService, RequestStack $request) {
+		$this->uhs = $uploadHelperService;
+		$this->request = $request->getCurrentRequest()->request->all();
 	}
 
 	public function buildForm (FormBuilderInterface $builder, array $options)
@@ -34,8 +37,7 @@ class NetlivaFileType extends AbstractType
 		// DB'den veriyi çekerken
 		$getDataFromModel = function ($data) use ($builder, &$file_before_submit)
 		{
-			$returnData = null;
-
+			// dump('DBden veriyi çekerken', $data);
 			if (is_string($data) and preg_match("/\|/",$data))
 				$data = explode("|",$data);
 
@@ -47,14 +49,14 @@ class NetlivaFileType extends AbstractType
 				$returnData = new NetlivaFolder();
 				foreach ($data as $d)
 				{
-					$file = $this->_createNetlivaFile($d);
+					$file = $this->uhs->getNetlivaFile($d);
 					if($file)
 						$returnData->addFile($file);
 				}
 			}
 			else
 			{
-				$returnData = $this->_createNetlivaFile($data);
+				$returnData = $this->uhs->getNetlivaFile($data);
 			}
 
 			$file_before_submit = $returnData;
@@ -64,8 +66,11 @@ class NetlivaFileType extends AbstractType
 		// Veriyi Forma Eklerken
 		$setDataToView = function($data) use ($builder)
 		{
-
+			// dump('Veriyi Forma Eklerken', $data);
 			if (is_array($data)) return null;
+
+			if ($data instanceof NetlivaFile)
+				return $data->getUploadedFile();
 
 			return $data;
 		};
@@ -73,6 +78,7 @@ class NetlivaFileType extends AbstractType
 		// Veriyi Formdan Alırken
 		$getDataFromView = function($data) use ($builder, &$file_before_submit)
 		{
+			// dump('Veriyi Formdan Alırken', $data);
 			if (!$data and $file_before_submit)
 			{
 				$data = $file_before_submit;
@@ -84,6 +90,7 @@ class NetlivaFileType extends AbstractType
 		// DB'ye Kaydederken
 		$setDataToModel = function ($data) use ($builder, $options)
 		{
+			// dump('DBye Kaydederken', $data);
 			if (is_array($data))
 			{
 				$dir = new NetlivaFolder();
@@ -91,12 +98,21 @@ class NetlivaFileType extends AbstractType
 				foreach ($data as $k => $f)
 				{
 					$f = $this->_dataTrans($f, $builder, $options);
-					if ($f instanceof NetlivaFile)
-						$dir->addFile($f);
+					if ($f instanceof NetlivaFile) $dir->addFile($f);
 				}
+				if ($options['return_data_type'] == 'string') return $dir->__toString();
+
+				if ($options['return_data_type'] == 'array') return $dir->jsonSerialize();
+
 				return $dir;
 			}
 			else $data = $this->_dataTrans($data, $builder, $options);
+
+			if ($data instanceof NetlivaFile && $options['return_data_type'] == 'string')
+				return $data->__toString();
+
+			if ($data instanceof NetlivaFile && $options['return_data_type'] == 'array')
+				return $data->jsonSerialize();
 
 			return $data;
 		};
@@ -105,8 +121,9 @@ class NetlivaFileType extends AbstractType
 			$form           = $event->getForm();
 			$requestHandler = $form->getConfig()->getRequestHandler();
 
+			// dump('PRE_SUBMIT', $event);
 			// formdan delete değeri gönderildiyse, veritabanındaki değeri silmek için önceki değeri sil
-			if ($event->getData() == "delete")
+			if ($this->_findRequest($form) == "delete")
 			{
 				$file_before_submit = null;
 			}
@@ -150,16 +167,25 @@ class NetlivaFileType extends AbstractType
 			));
 	}
 
+	private function _findRequest (FormInterface  $form)
+	{
+		if ($form->getParent())
+		{
+			$req = $this->_findRequest($form->getParent());
+			if (is_array($req) && key_exists($form->getName(), $req))
+				return $req[$form->getName()];
+		}
+
+		if (key_exists($form->getName(), $this->request))
+			return $this->request[$form->getName()];
+
+	}
+
 	public function buildView (FormView $view, FormInterface $form, array $options)
 	{
 		$view->vars['types'] = $options['types'];
 		$view->vars['deletable'] = $options['deletable'];
 		$view->vars['bootstrap'] = $options['bootstrap'];
-
-		if ($options['multiple']) {
-			$view->vars['full_name'] .= '[]';
-			$view->vars['attr']['multiple'] = 'multiple';
-		}
 	}
 
 	public function finishView(FormView $view, FormInterface $form, array $options)
@@ -185,14 +211,16 @@ class NetlivaFileType extends AbstractType
 		};
 
 		$resolver->setDefaults([
-			'types'			=> null,
-			'deletable'		=> true,
-			'bootstrap'		=> false,
-			'unique_name'	=> false,
-			'compound' 		=> false,
-			'data_class' 	=> $dataClass,
-			'empty_data' 	=> $emptyData,
-			'multiple' 		=> false,
+		   'types'            => null,
+		   'return_data_type' => 'array',
+		   'deletable'        => true,
+		   'bootstrap'        => false,
+		   'unique_name'      => false,
+		   'compound'         => false,
+		   'data_class'       => $dataClass,
+		   'empty_data'       => $emptyData,
+		   'multiple'         => false,
+		   'sub_folder'           => null,
 		]);
 	}
 
@@ -207,45 +235,42 @@ class NetlivaFileType extends AbstractType
 	}
 
 
-
-	private function _createNetlivaFile($data)
-	{
-		$oriName = null;
-		if (is_array($data) and key_exists("original_name",$data))
-			$oriName = $data["original_name"];
-
-		$path = $this->uploadHelperService->getFilePath($data);
-		if (file_exists($path))
-			return new NetlivaFile($path, $this->uploadHelperService, $oriName);
-
-		return null;
-
-	}
 	private function _dataTrans($data, $builder, $options)
 	{
 		if ($data instanceof UploadedFile and !($data instanceof NetlivaFile))
 		{
-			if ($options["unique_name"]) $fileName = $this->uploadHelperService->generateUniqueFileName($builder->getName()) . '.' . $data->guessExtension();
+			if ($options["unique_name"]) $fileName = $this->uhs->generateUniqueFileName($builder->getName()) . '.' . $data->guessExtension();
 			else $fileName = $this->_sanitize($data->getClientOriginalName(), true);
 
-			$fileName = $this->_renameIfExist($fileName);
+			$fileName = $this->_renameIfExist($options["sub_folder"], $fileName);
 
+			$path = $this->uhs->getUploadPath();
+			if ($options["sub_folder"])
+			{
+				$options["sub_folder"] = $this->uhs->trimPath($options["sub_folder"]);
+				$path = $path.DIRECTORY_SEPARATOR.$options["sub_folder"];
 
-			$data->move($this->uploadHelperService->getUploadPath(), $fileName);
+			}
 
-			$path = $this->uploadHelperService->getUploadPath() . DIRECTORY_SEPARATOR . $fileName;
+			$data->move($path, $fileName);
+
+			$path = $path . DIRECTORY_SEPARATOR . $this->uhs->trimPath($fileName);
 			if (file_exists($path))
 			{
-				$data = new NetlivaFile($path, $this->uploadHelperService, $data->getClientOriginalName());
 				$this->moved_file[$builder->getName()] = $data;
+
+				$data = $this->uhs->createNetlivaFileFromPath($path, $options["sub_folder"]);
 			}
 		}
 		return $data;
 	}
 
-	private function _renameIfExist($filename)
+	private function _renameIfExist($sub_folder, $filename)
 	{
-		$path = $this->uploadHelperService->getUploadPath();
+		$path = $this->uhs->getUploadPath();
+
+		if ($sub_folder)
+			$path = $path.DIRECTORY_SEPARATOR.$sub_folder;
 
 		if (!file_exists($path.DIRECTORY_SEPARATOR.$filename)) return $filename;
 

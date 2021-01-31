@@ -4,6 +4,7 @@ namespace Netliva\FileTypeBundle\Controller;
 use Doctrine\ORM\QueryBuilder;
 use Netliva\FileTypeBundle\Form\Type\NetlivaFileType;
 use Netliva\FileTypeBundle\Service\NetlivaFolder;
+use Netliva\FileTypeBundle\Service\UploadHelperService;
 use Netliva\MediaLibBundle\Entity\Files;
 use Netliva\MediaLibBundle\Form\FormType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -16,8 +17,8 @@ class FileController extends Controller
 {
 	public function show($file_name): Response
 	{
-		$fileExt = $this->get("netliva.file.upload_helper");
-		$file = $fileExt->getUploadPath().DIRECTORY_SEPARATOR.$file_name;
+		$nfu = $this->get("netliva.file.upload_helper");
+		$file = $nfu->getUploadPath().DIRECTORY_SEPARATOR.$file_name;
 
 		if (file_exists($file) and !is_dir($file))
 		{
@@ -52,18 +53,20 @@ class FileController extends Controller
 		$query = $qb->getQuery();
 		$files = $query->getResult();
 
-		$fileExt = $this->get("netliva.file.upload_helper");
+		/** @var UploadHelperService $nfu */
+		$nfu = $this->get("netliva.file.upload_helper");
 
 		$data = [];
 		foreach ($files as $file)
 		{
+			$netlivaFile = $nfu->getNetlivaFile($file->getFileInfo());
 			$data[] = [
 				"id" 		=> $file->getId(),
-				"url" 		=> $fileExt->getFileUri($file->getFileInfo()),
-				"filename" 	=> $fileExt->getFileName($file->getFileInfo()),
+				"url" 		=> $nfu->getFileUri($netlivaFile),
+				"filename" 	=> $netlivaFile->getFilename(),
 				"data"		=> [
-					"mimeType"		=> key_exists("mimeType",$file->getFileInfo()) ? $file->getFileInfo()["mimeType"] : null,
-					"extension"		=> key_exists("extension",$file->getFileInfo()) ? $file->getFileInfo()["extension"] : null,
+					"mimeType"		=> $netlivaFile->getMimeType(),
+					"extension"		=> $netlivaFile->getExtension(),
 					"title"			=> $file->getTitle(),
 					"caption"		=> $file->getCaption(),
 					"alt"			=> $file->getAlt(),
@@ -72,15 +75,13 @@ class FileController extends Controller
 				]
 			];
 		}
-		
+
 		return new JsonResponse($data);
 	}
 
 	public function upload(Request $request): JsonResponse
 	{
-		$upload_success = null;
-		$upload_error = '';
-
+		$nfu  = $this->get("netliva.file.upload_helper");
 		$form = $this->createForm(FormType::class);
 		$form->handleRequest($request);
 
@@ -90,13 +91,13 @@ class FileController extends Controller
 		{
 			$dir = $form->get("nmlb-file")->getData();
 			$returnFiles = [];
-			if ($dir instanceof NetlivaFolder)
+			if (is_array($dir))
 			{
-				foreach ($dir->getFiles() as $file)
+				foreach ($dir as $file)
 				{
 					$fe = new Files();
 					$fe->setAddAt(new \DateTime());
-					$fe->setTitle(pathinfo($file->getOriginalName(),PATHINFO_FILENAME));
+					$fe->setTitle($file['filename']);
 					$fe->setFileInfo($file);
 					$em->persist($fe);
 					$em->flush();

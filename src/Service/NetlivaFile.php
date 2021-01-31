@@ -12,102 +12,116 @@ namespace Netliva\FileTypeBundle\Service;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class NetlivaFile extends UploadedFile implements \JsonSerializable
+class NetlivaFile implements \JsonSerializable
 {
+	/** @var string */
+	private $filename;
+	/** @var string */
+	private $subfolder;
+	/** @var string */
+	private $path;
 
-	/**
-	 * @var string
-	 */
-	private $uri;
-
-	/**
-	 * @var string
-	 */
-	private $fileType;
-
-	/**
-	 * @var string|null
-	 */
-	private $originalName;
 
 	public function __toString ()
 	{
-		return $this->getFilename();
+		return $this->getNameWithSubfolder();
 	}
 
-	public function __construct (string $path, UploadHelperService $uploadHelperService, $originalName = null) {
-		parent::__construct($path, $uploadHelperService->getFileName($this), $this?mime_content_type($path):null, null, true);
-
-		$mime = explode("/",$this->getMimeType());
-		
-		$this->setUri($uploadHelperService->getFileUri($this));
-		$this->setFileType($mime[0]);
-		$this->setOriginalName($originalName);
-	}
+	public function __construct () { }
 
 
 	public function jsonSerialize()
 	{
-
 		return [
 			"filename"		=> $this->getFilename(),
-			"mimeType"		=> $this->getMimeType(),
-			"type" 			=> $this->getType(),
-			"extension"		=> $this->getExtension(),
-			"path" 			=> $this->getPath(),
-			"pathName"		=> $this->getPathname(),
-			"uri"			=> $this->getUri(),
-			"originalName"	=> $this->originalName,
+			"path"  		=> $this->getPath(),
+			"subfolder"		=> $this->getSubfolder(),
 		 ];
 	}
 
+	public function getUploadedFile ()
+	{
+		if (!file_exists($this->getPath())) return null;
+
+		return new UploadedFile($this->getPath(), $this->getFilename(), mime_content_type($this->getPath()));
+	}
+
+	public function getMimeType ()
+	{
+		if (!file_exists($this->getPath())) return null;
+		return mime_content_type($this->getPath());
+	}
+
+	public function getFileType ()
+	{
+		if (!file_exists($this->getPath())) return null;
+
+		return current(explode('/',mime_content_type($this->getPath())));
+
+	}
+
+	public function getExtension ()
+	{
+		return pathinfo($this->getPath(), PATHINFO_EXTENSION);
+	}
+
+	public function getNameWithSubfolder ()
+	{
+		if (!$this->getFilename()) return '';
+		
+		if ($this->getSubfolder())
+			return $this->getSubfolder().DIRECTORY_SEPARATOR.$this->getFilename();
+
+		return $this->getFilename();
+	}
+
 	/**
 	 * @return string
 	 */
-	public function getUri (): string
+	public function getFilename (): ?string
 	{
-		return $this->uri;
+		return $this->filename;
 	}
 
 	/**
-	 * @param string $uri
+	 * @param string $filename
 	 */
-	public function setUri (string $uri): void
+	public function setFilename (string $filename): void
 	{
-		$this->uri = $uri;
+		$this->filename = $filename;
 	}
 
 
 	/**
 	 * @return string
 	 */
-	public function getFileType (): string
+	public function getSubfolder (): ?string
 	{
-		return $this->fileType;
+		return $this->subfolder;
 	}
 
 	/**
-	 * @param string $fileType
+	 * @param string $subfolder
 	 */
-	public function setFileType (string $fileType): void
+	public function setSubfolder (?string $subfolder): void
 	{
-		$this->fileType = $fileType;
+		$this->subfolder = $subfolder;
 	}
-	
+
 	/**
 	 * @return string
 	 */
-	public function getOriginalName (): string
+	public function getPath (): string
 	{
-		return $this->originalName;
+		return $this->path;
 	}
 
 	/**
-	 * @param string|null $originalName
+	 * @param string $path
 	 */
-	public function setOriginalName ($originalName): void
+	public function setPath (string $path): void
 	{
-		$this->originalName = $originalName;
+		$this->path = $path;
 	}
 
 }

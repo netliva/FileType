@@ -12,7 +12,7 @@ services:
 
     netliva.file_type:
         class: Netliva\FileTypeBundle\Form\Type\NetlivaFileType
-        arguments: [ "@netliva.file.upload_helper" ]
+        arguments: [ "@netliva.file.upload_helper", "@request_stack" ]
         tags:
             - { name: form.type }
 

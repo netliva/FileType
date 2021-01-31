@@ -25,11 +25,11 @@ class FileLoader extends Loader
 		$config = $this->container->getParameter('netliva.file_config');
 
 
-		$route = new Route($config["download_uri"]."/{file_name}", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::show'], []);
+		$route = new Route($config["download_uri"]."/{file_name}", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::show'], ['file_name'=>".+"]);
 		$routes->add('netliva_file', $route);
-		$route = new Route("/netliva/file/upload", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::upload'], []);
+		$route = new Route("/netliva/file/upload", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::upload']);
 		$routes->add('netliva_upload', $route);
-		$route = new Route("/netliva/file/list", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::getFiles'], []);
+		$route = new Route("/netliva/file/list", ['_controller' => 'Netliva\FileTypeBundle\Controller\FileController::getFiles']);
 		$routes->add('netliva_file_list', $route);
 
 		$this->isLoaded = true;

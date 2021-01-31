@@ -14,23 +14,27 @@
 {% block netliva_file_type_widget %}
 	{% import _self as func %}
 	<{{ element|default('div') }} class="nftb-area">
-		<ul class="nftb-images" id="{{ form.vars.id }}_images_area">
-			{% if form.vars.data and form.vars.data.fileType is defined %}
-				{% if form.vars.data.fileType == "image" %}
-					{{ func.getImg (form.vars.id, form.vars.data) }}
-				{% endif %}
-			{% elseif form.vars.data and form.vars.data.files is defined %}
-				{% for data in form.vars.data.files %}
-					{% if data.fileType == "image" %}
-						{{ func.getImg (form.vars.id, data) }}
+		{% set file_names = "" %}
+		{% if form.vars.data and (form.vars.data.fileType is defined or form.vars.data.files is defined) %}
+			<ul class="nftb-images" id="{{ form.vars.id }}_images_area">
+				{% if form.vars.data and form.vars.data.fileType is defined %}
+					{% if form.vars.data.fileType == "image" %}
+						{{ func.getImg (form.vars.id, form.vars.data) }}
 					{% endif %}
-				{% endfor %}
-			{% endif %}
-		</ul>
-		{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
-			<input type="button" class="{{ bootstrap?"btn" }}" id="{{ form.vars.id }}_delete" data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
-				   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
-			/>
+					{% if form.vars.data.filename is defined %}
+						{% set file_names = form.vars.data.filename %}
+					{% endif %}
+				{% elseif form.vars.data and form.vars.data.files is defined %}
+					{% for data in form.vars.data.files %}
+						{% if data.fileType == "image" %}
+							{{ func.getImg (form.vars.id, data) }}
+						{% endif %}
+						{% if data.filename is defined %}
+							{% set file_names = (file_names ? file_names ~ ", ") ~ data.filename %}
+						{% endif %}
+					{% endfor %}
+				{% endif %}
+			</ul>
 		{% endif %}
 		{% if bootstrap %}
 			<{{ element|default('div') }} class="custom-file">
@@ -40,11 +44,23 @@
 		{% if bootstrap %}
 			<label for="{{ form.vars.id }}" class="custom-file-label">
 				{%- if attr.placeholder is defined -%}
+					{{- file_names -}}
+				{%- elseif attr.placeholder is defined -%}
 					{{- translation_domain is same as(false) ? attr.placeholder : attr.placeholder|trans({}, translation_domain) -}}
 				{%- endif -%}
 			</label>
 		{% endif %}
-		</{{ element|default('div') }}>
+		{% if bootstrap %}
+			</{{ element|default('div') }}>
+		{% endif %}
+	{% if form.vars.data and (form.vars.data.fileType is defined or form.vars.data.files is defined) and deletable %}
+		<input type="button"
+			   class="{{ bootstrap?"btn btn-warning" }}"
+			   id="{{ form.vars.id }}_delete"
+			   data-othertext="{{- translation_domain is same as(false) ? "vazgeç" : "vazgeç"|trans({}, translation_domain) -}}"
+			   value="{{- translation_domain is same as(false) ? "sil" : "sil"|trans({}, translation_domain) -}}"
+		/>
+	{% endif %}
 	</{{ element|default('div') }}>
 	{% if bootstrap %}
 		<script type="text/javascript">
@@ -73,14 +89,17 @@
 				}
 			});
 		</script>
+	{% else %}
+		<script type="text/javascript">
+			document.getElementById("{{ form.vars.id }}").classList.remove("custom-file-input");
+		</script>
 	{% endif %}
-	{% if form.vars.data and form.vars.data.fileType is defined and deletable %}
+	{% if form.vars.data and (form.vars.data.fileType is defined or form.vars.data.files is defined) and deletable %}
 		<script type="text/javascript">
 			document.getElementById("{{ form.vars.id }}_delete").addEventListener("click",function () {
 				var field = document.getElementById("{{ form.vars.id }}");
 				var img = document.getElementById("{{ form.vars.id }}_images_area");
 				var label = this.parentNode.getElementsByClassName("custom-file-label")[0];
-				console.log(label);
 				var othertext = this.dataset.othertext;
 				this.dataset.othertext = this.value;
 				this.value = othertext;
@@ -89,31 +108,56 @@
 					this.dataset.delete = "off";
 					field.value = "";
 					field.type = "file";
+					if (field.getAttribute('multiple'))
+					{
+						var name = field.getAttribute('name')
+						if (name.substr(-2) != '[]')
+						{
+							field.setAttribute('name', name+'[]');
+						}
+					}
 					if (img)
 					{
 						img.style.display = img.dataset.display;
-						label.style.display = label.dataset.display;
+						if (label != undefined)
+							label.style.display = label.dataset.display;
 					}
+					if (field.parentNode.classList.contains('custom-file'))
+						field.parentNode.style.display = "";
 				}
 				else
 				{
 					this.dataset.delete = "on";
 					field.type = "hidden";
 					field.value = "delete";
+					if (field.getAttribute('multiple'))
+					{
+						var name = field.getAttribute('name')
+						if (name.substr(-2) == '[]')
+						{
+							field.setAttribute('name', name.substr(0,name.length-2));
+						}
+					}
 					if (img)
 					{
 						img.dataset.display = img.style.display;
 						img.style.display = "none";
-						label.dataset.display = label.style.display;
-						label.style.display = "none";
+						if (label != undefined)
+						{
+							label.dataset.display = label.style.display;
+							label.style.display = "none";
+						}
 					}
+					if (field.parentNode.classList.contains('custom-file'))
+						field.parentNode.style.display = "none";
 				}
 				return false;
 			})
 		</script>
 	{% endif %}
 	<style>
-		.nftb-area, .nftb-area .custom-file { display: inline-block; width: auto; vertical-align: middle; }
+		.nftb-area { display: inline-flex; width: 100%; vertical-align: middle; gap: 5px; align-items: center; }
+		.nftb-area .custom-file { display: inline-block; width: auto; vertical-align: middle; flex-grow: 1; }
 		#{{ form.vars.id }}_images_area { margin: 0; padding: 0; display: inline-block;vertical-align: middle; }
 		#{{ form.vars.id }}_images_area .nftb-image {
 			position: relative; float: left; padding: 3px; margin: 0; color: #444; cursor: pointer; list-style: none; text-align: center;
