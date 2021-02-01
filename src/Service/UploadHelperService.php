@@ -151,15 +151,17 @@ class UploadHelperService extends AbstractExtension
 
 	public function createNetlivaFileFromPath($path, $subFolder = null)
 	{
+		dump($path, $subFolder);
+
 		if (file_exists($path))
 		{
 			$uploadPath = $this->getUploadPath();
 
-			$fileName = $this->trimPath(substr($path,strlen($this->trimPath($uploadPath))));
+			$fileName = $this->trimPath(mb_substr($path,mb_strlen($uploadPath)));
 			if ($subFolder)
 			{
 				$subFolder = $this->trimPath($subFolder);
-				$fileName = $this->trimPath(substr($fileName,strlen($this->trimPath($subFolder))));
+				$fileName = $this->trimPath(mb_substr($fileName,mb_strlen($this->trimPath($subFolder))));
 			}
 			$file = new NetlivaFile();
 			$file->setPath($path);

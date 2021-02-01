@@ -43,7 +43,7 @@
 		{{- block('form_widget_simple') -}}
 		{% if bootstrap %}
 			<label for="{{ form.vars.id }}" class="custom-file-label">
-				{%- if attr.placeholder is defined -%}
+				{%- if file_names -%}
 					{{- file_names -}}
 				{%- elseif attr.placeholder is defined -%}
 					{{- translation_domain is same as(false) ? attr.placeholder : attr.placeholder|trans({}, translation_domain) -}}
