@@ -34,7 +34,7 @@ class FileController extends Controller
 	{
 		$em = $this->getDoctrine()->getManager();
 		/** @var QueryBuilder $qb */
-		$qb = $em->getRepository("NetlivaMediaLibBundle:Files")->createQueryBuilder('f');
+		$qb = $em->getRepository(Files::class)->createQueryBuilder('f');
 		$qb->orderBy("f.addAt","DESC");
 
 

@@ -117,7 +117,7 @@ class UploadHelperService extends AbstractExtension
 		if (!$mediaId) return null;
 		elseif (is_array($mediaId) && key_exists("mediaId", $mediaId)) $mediaId = $mediaId["mediaId"];
 
-		$file = $this->em->getRepository("NetlivaMediaLibBundle:Files")->find($mediaId);
+		$file = $this->em->getRepository(Files::class)->find($mediaId);
 		if($file and $file->getFileInfo())
 		{
 			return $file;
